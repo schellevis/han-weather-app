@@ -1,5 +1,39 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { processRtl433Event, getWeatherStationData, getActiveSensorCount } from '../../services/weatherstation';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import type * as MqttType from 'mqtt';
+import { processRtl433Event, getWeatherStationData, getActiveSensorCount, startMqttSubscriber } from '../../services/weatherstation';
+
+interface MockMqttClient {
+  on: ReturnType<typeof vi.fn>;
+  subscribe: ReturnType<typeof vi.fn>;
+  end: ReturnType<typeof vi.fn>;
+  _emit: (event: string, ...args: unknown[]) => void;
+}
+
+interface MockMqttModule extends Omit<typeof MqttType, 'default'> {
+  default: { connect: ReturnType<typeof vi.fn> };
+  _mockClient: MockMqttClient;
+}
+
+// Mock the mqtt module so tests don't need a real broker
+vi.mock('mqtt', () => {
+  const handlers: Record<string, ((...args: unknown[]) => void)[]> = {};
+  const mockClient: MockMqttClient = {
+    on: vi.fn((event: string, handler: (...args: unknown[]) => void) => {
+      handlers[event] = handlers[event] ?? [];
+      handlers[event].push(handler);
+      return mockClient;
+    }),
+    subscribe: vi.fn((_topic: string, cb?: (err: Error | null) => void) => {
+      cb?.(null);
+      return mockClient;
+    }),
+    end: vi.fn(),
+    _emit: (event: string, ...args: unknown[]) => {
+      (handlers[event] ?? []).forEach((h) => h(...args));
+    },
+  };
+  return { default: { connect: vi.fn(() => mockClient) }, _mockClient: mockClient };
+});
 
 // Reset module state between tests by clearing sensor store
 // We rely on getWeatherStationData pruning stale sensors
@@ -145,6 +179,51 @@ describe('weatherstation service', () => {
 
       const count = getActiveSensorCount();
       expect(count).toBeGreaterThan(0);
+    });
+  });
+
+  describe('startMqttSubscriber', () => {
+    it('should connect to the MQTT broker and subscribe to the configured topic', async () => {
+      const mqttModule = await import('mqtt');
+      const mockConnect = vi.mocked(mqttModule.default.connect);
+      mockConnect.mockClear();
+
+      startMqttSubscriber();
+
+      expect(mockConnect).toHaveBeenCalledOnce();
+    });
+
+    it('should process valid rtl_433 JSON messages received over MQTT', async () => {
+      const mqttModule = await import('mqtt') as unknown as MockMqttModule;
+      const mockClient = mqttModule._mockClient;
+
+      // Trigger connect to subscribe
+      mockClient._emit('connect');
+
+      // Simulate receiving an MQTT message
+      const payload = Buffer.from(JSON.stringify({
+        model: 'MqttTestSensor',
+        id: 55,
+        temperature_C: 18.5,
+        humidity: 72,
+      }));
+      mockClient._emit('message', 'rtl_433/MqttTestSensor/55', payload);
+
+      const data = getWeatherStationData();
+      const sensor = data.sensors.find((s) => s.model === 'MqttTestSensor' && s.id === 55);
+      expect(sensor).toBeTruthy();
+      expect(sensor!.temperature).toBe(18.5);
+      expect(sensor!.humidity).toBe(72);
+    });
+
+    it('should silently ignore non-JSON MQTT payloads', async () => {
+      const mqttModule = await import('mqtt') as unknown as MockMqttModule;
+      const mockClient = mqttModule._mockClient;
+
+      // Should not throw
+      expect(() => {
+        mockClient._emit('message', 'rtl_433/something', Buffer.from('not-json'));
+      }).not.toThrow();
     });
   });
 });
