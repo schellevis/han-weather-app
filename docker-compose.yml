@@ -1,4 +1,12 @@
 services:
+  mqtt:
+    image: eclipse-mosquitto:2
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+    restart: unless-stopped
+
   weer:
     build: .
     ports:
@@ -10,4 +18,8 @@ services:
       - HA_WEBHOOK_URL=${HA_WEBHOOK_URL:-}
       - RTL433_ENABLED=${RTL433_ENABLED:-false}
       - RTL433_SENSOR_IDS=${RTL433_SENSOR_IDS:-}
+      - MQTT_BROKER_URL=${MQTT_BROKER_URL:-mqtt://mqtt:1883}
+      - MQTT_TOPIC=${MQTT_TOPIC:-rtl_433/#}
+    depends_on:
+      - mqtt
     restart: unless-stopped

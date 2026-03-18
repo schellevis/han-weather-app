@@ -7,12 +7,14 @@ export const config = {
   knmiApiKey: process.env.KNMI_API_KEY || '',
   haWebhookUrl: process.env.HA_WEBHOOK_URL || '',
 
-  // rtl_433 weather station support
+  // rtl_433 weather station support via MQTT
   rtl433Enabled: process.env.RTL433_ENABLED === 'true',
   rtl433SensorIds: (process.env.RTL433_SENSOR_IDS || '')
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean),
+  mqttBrokerUrl: process.env.MQTT_BROKER_URL || 'mqtt://localhost:1883',
+  mqttTopic: process.env.MQTT_TOPIC || 'rtl_433/#',
 
   alerts: {
     checkInterval: 5 * 60 * 1000, // 5 min

@@ -1,3 +1,4 @@
+import mqtt from 'mqtt';
 import { config } from '../config';
 
 export interface SensorReading {
@@ -151,4 +152,45 @@ export function getActiveSensorCount(): number {
     }
   }
   return count;
+}
+
+/**
+ * Connect to the MQTT broker and subscribe to the configured topic.
+ * rtl_433 should be started with: rtl_433 -F "mqtt://mqtthost:1883,retain=0,devices=rtl_433[/model][/id]"
+ * Returns the MQTT client so the caller can handle cleanup.
+ */
+export function startMqttSubscriber(): mqtt.MqttClient {
+  const client = mqtt.connect(config.mqttBrokerUrl);
+
+  client.on('connect', () => {
+    console.log(`MQTT connected to ${config.mqttBrokerUrl}`);
+    client.subscribe(config.mqttTopic, (err) => {
+      if (err) {
+        console.error(`MQTT subscribe error for topic "${config.mqttTopic}":`, err.message);
+      } else {
+        console.log(`MQTT subscribed to topic: ${config.mqttTopic}`);
+      }
+    });
+  });
+
+  client.on('message', (_topic, payload) => {
+    try {
+      const event = JSON.parse(payload.toString()) as Record<string, unknown>;
+      if (event && typeof event === 'object' && event.model) {
+        processRtl433Event(event);
+      }
+    } catch {
+      // Ignore non-JSON payloads
+    }
+  });
+
+  client.on('error', (err) => {
+    console.error('MQTT error:', err.message);
+  });
+
+  client.on('reconnect', () => {
+    console.log('MQTT reconnecting...');
+  });
+
+  return client;
 }
