@@ -69,6 +69,8 @@ export function useLocations(serverDefault: { latitude: number; longitude: numbe
     setLocations((prev) => {
       const existing = prev.find((l) => l.isGps);
       if (existing) {
+        // Select existing GPS location immediately
+        setSelectedId(existing.id);
         return prev.map((l) =>
           l.isGps ? { ...l, latitude, longitude } : l
         );
@@ -80,16 +82,10 @@ export function useLocations(serverDefault: { latitude: number; longitude: numbe
         longitude,
         isGps: true,
       };
+      // Select new GPS location immediately
+      setSelectedId(gpsLoc.id);
       return [gpsLoc, ...prev];
     });
-    // Select GPS location after state update
-    setTimeout(() => {
-      setLocations((prev) => {
-        const gps = prev.find((l) => l.isGps);
-        if (gps) setSelectedId(gps.id);
-        return prev;
-      });
-    }, 0);
   }, []);
 
   return {
