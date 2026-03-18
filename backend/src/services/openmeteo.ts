@@ -150,12 +150,12 @@ export async function fetchCurrentWeather(
   const forecast = await fetchMultiModelForecast(lat, lon, 1);
   // Format current hour in Amsterdam timezone to match Open-Meteo's response format
   const now = new Date();
-  const amsFmt = new Intl.DateTimeFormat('sv-SE', {
+  const currentHourAmsterdam = new Intl.DateTimeFormat('sv-SE', {
     timeZone: 'Europe/Amsterdam',
     year: 'numeric', month: '2-digit', day: '2-digit',
     hour: '2-digit', minute: '2-digit', hour12: false,
   }).format(now).replace(' ', 'T');
-  const currentHour = amsFmt;
+  const currentHour = currentHourAmsterdam;
 
   const models: CurrentWeatherData['models'] = {};
 

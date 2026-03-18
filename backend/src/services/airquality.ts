@@ -63,12 +63,12 @@ export async function fetchAirQuality(
 
   // Find current hour's index — format in Amsterdam timezone to match API response
   const now = new Date();
-  const amsFmt = new Intl.DateTimeFormat('sv-SE', {
+  const currentHourAmsterdam = new Intl.DateTimeFormat('sv-SE', {
     timeZone: 'Europe/Amsterdam',
     year: 'numeric', month: '2-digit', day: '2-digit',
     hour: '2-digit', minute: '2-digit', hour12: false,
   }).format(now).replace(' ', 'T');
-  const currentHour = amsFmt;
+  const currentHour = currentHourAmsterdam;
   const idx = data.hourly.time.findIndex((t) => t === currentHour);
   const i = idx >= 0 ? idx : 0;
 
