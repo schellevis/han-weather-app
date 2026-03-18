@@ -8,6 +8,7 @@ import { radarRouter } from './routes/radar';
 import { warningsRouter } from './routes/warnings';
 import { stookwijzerRouter } from './routes/stookwijzer';
 import { airqualityRouter } from './routes/airquality';
+import { weatherstationRouter } from './routes/weatherstation';
 import { checkAlerts } from './services/alerts';
 
 export const app = express();
@@ -22,6 +23,7 @@ app.use('/api/radar', radarRouter);
 app.use('/api/warnings', warningsRouter);
 app.use('/api/stookwijzer', stookwijzerRouter);
 app.use('/api/airquality', airqualityRouter);
+app.use('/api/weatherstation', weatherstationRouter);
 
 // Config endpoint
 app.get('/api/config', (_req, res) => {
@@ -31,6 +33,7 @@ app.get('/api/config', (_req, res) => {
     locationName: config.locationName,
     province: config.province,
     models: config.models,
+    rtl433Enabled: config.rtl433Enabled,
   });
 });
 

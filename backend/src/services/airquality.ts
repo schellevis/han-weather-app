@@ -61,11 +61,14 @@ export async function fetchAirQuality(
 
   const data = (await res.json()) as OpenMeteoAirQualityResponse;
 
-  // Find current hour's index
+  // Find current hour's index — format in Amsterdam timezone to match API response
   const now = new Date();
-  const currentHour = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours())
-    .toISOString()
-    .slice(0, 16);
+  const currentHourAmsterdam = new Intl.DateTimeFormat('sv-SE', {
+    timeZone: 'Europe/Amsterdam',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hour12: false,
+  }).format(now).replace(' ', 'T');
+  const currentHour = currentHourAmsterdam;
   const idx = data.hourly.time.findIndex((t) => t === currentHour);
   const i = idx >= 0 ? idx : 0;
 

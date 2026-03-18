@@ -8,4 +8,6 @@ services:
       - LONGITUDE=4.89
       - KNMI_API_KEY=${KNMI_API_KEY:-}
       - HA_WEBHOOK_URL=${HA_WEBHOOK_URL:-}
+      - RTL433_ENABLED=${RTL433_ENABLED:-false}
+      - RTL433_SENSOR_IDS=${RTL433_SENSOR_IDS:-}
     restart: unless-stopped

@@ -1,4 +1,4 @@
-import { useAppConfig, useForecast, useCurrentWeather, useWarnings, useStookwijzer, useAirQuality } from './hooks/useWeatherData';
+import { useAppConfig, useForecast, useCurrentWeather, useWarnings, useStookwijzer, useAirQuality, useWeatherStation } from './hooks/useWeatherData';
 import { useLocations } from './hooks/useLocations';
 import { useModelToggle } from './hooks/useModelToggle';
 import { MultiModelChart } from './components/MultiModelChart';
@@ -8,6 +8,7 @@ import { Warnings } from './components/Warnings';
 import { WeatherInsights } from './components/WeatherInsights';
 import { ExternalLinks } from './components/ExternalLinks';
 import { LocationPicker } from './components/LocationPicker';
+import { WeatherStation } from './components/WeatherStation';
 import { formatDateTime } from './utils/formatting';
 
 export default function App() {
@@ -29,6 +30,7 @@ export default function App() {
   const warnings = useWarnings();
   const stookwijzer = useStookwijzer(lat, lon);
   const airQuality = useAirQuality(lat, lon);
+  const weatherStation = useWeatherStation(config?.rtl433Enabled ?? false);
   const { enabledModels, toggle, isEnabled, allModels } = useModelToggle();
 
   if (forecastLoading && currentLoading) {
@@ -109,6 +111,13 @@ export default function App() {
         {warnings && warnings.warnings.length > 0 && (
           <div style={{ marginTop: 'var(--space-lg)' }}>
             <Warnings data={warnings} />
+          </div>
+        )}
+
+        {/* Weather station (rtl_433) */}
+        {weatherStation && weatherStation.sensors.length > 0 && (
+          <div style={{ marginTop: 'var(--space-lg)' }}>
+            <WeatherStation data={weatherStation} />
           </div>
         )}
 
