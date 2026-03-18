@@ -74,6 +74,28 @@ docker compose up --build -d
 
 Het dashboard is nu bereikbaar op `http://localhost:3100`.
 
+#### Docker image bouwen (no-cache)
+
+Gebruik het meegeleverde buildscript om het image opnieuw te bouwen zonder cache.
+Dit is handig na een `git pull` of als je een schone build wilt:
+
+```bash
+# Maak het script uitvoerbaar (eenmalig)
+chmod +x build.sh
+
+# Bouw het image (standaard tag: han-weather-app:latest)
+./build.sh
+
+# Of met een eigen naam en tag
+./build.sh mijn-weather-app 1.0.0
+```
+
+Daarna start je de container via Docker Compose:
+
+```bash
+docker compose up -d
+```
+
 #### Docker Compose met configuratie
 
 Maak een `.env`-bestand aan (of pas `docker-compose.yml` aan):
@@ -101,11 +123,52 @@ RTL433_SENSOR_IDS=12345,42     # Optioneel: filter op specifieke sensor-IDs
 services:
   weer:
     build: .
+    container_name: weer-dashboard
     ports:
       - "3100:3100"
     env_file: .env
     restart: unless-stopped
 ```
+
+#### Portainer stack
+
+Je kunt het dashboard ook als stack deployen via [Portainer](https://www.portainer.io/).
+
+**Stap 1:** Bouw eerst het image op de server:
+
+```bash
+git clone https://github.com/schellevis/han-weather-app.git
+cd han-weather-app
+chmod +x build.sh && ./build.sh
+```
+
+**Stap 2:** Ga in Portainer naar **Stacks → Add stack**, geef de stack een naam
+(bijv. `weer-dashboard`) en plak de volgende YAML:
+
+```yaml
+services:
+  weer:
+    image: han-weather-app:latest
+    container_name: weer-dashboard
+    ports:
+      - "3100:3100"
+    environment:
+      # --- Locatie ---
+      - LATITUDE=52.37
+      - LONGITUDE=4.89
+      - LOCATION_NAME=Amsterdam
+      - PROVINCE=Noord-Holland
+      # --- KNMI API-key (optioneel) ---
+      - KNMI_API_KEY=
+      # --- Home Assistant webhook (optioneel) ---
+      - HA_WEBHOOK_URL=
+      # --- Eigen weerstation via rtl_433 (optioneel) ---
+      - RTL433_ENABLED=false
+      - RTL433_SENSOR_IDS=
+    restart: unless-stopped
+```
+
+Klik op **Deploy the stack**. Het dashboard is bereikbaar op `http://<server-ip>:3100`.
 
 ### Optie 2: Handmatige installatie
 
@@ -379,7 +442,11 @@ cd frontend && npx tsc --noEmit
 ### Bouwen
 
 ```bash
-# Docker
+# Docker (met build-script, no-cache)
+chmod +x build.sh && ./build.sh
+docker compose up -d
+
+# Docker (via Compose)
 docker compose up --build
 
 # Handmatig

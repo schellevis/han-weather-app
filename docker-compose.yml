@@ -1,13 +1,23 @@
 services:
   weer:
+    # Optie A: bouw het image lokaal (vereist broncode)
     build: .
+    # Optie B: gebruik een lokaal gebouwd image (na ./build.sh)
+    # image: han-weather-app:latest
+    container_name: weer-dashboard
     ports:
       - "3100:3100"
     environment:
+      # --- Locatie (standaard: Amsterdam) ---
       - LATITUDE=52.37
       - LONGITUDE=4.89
+      - LOCATION_NAME=Amsterdam
+      - PROVINCE=Noord-Holland
+      # --- KNMI API-key (optioneel, voor waarschuwingen) ---
       - KNMI_API_KEY=${KNMI_API_KEY:-}
+      # --- Home Assistant webhook (optioneel) ---
       - HA_WEBHOOK_URL=${HA_WEBHOOK_URL:-}
+      # --- Eigen weerstation via rtl_433 (optioneel) ---
       - RTL433_ENABLED=${RTL433_ENABLED:-false}
       - RTL433_SENSOR_IDS=${RTL433_SENSOR_IDS:-}
     restart: unless-stopped
