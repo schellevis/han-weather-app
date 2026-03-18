@@ -6,6 +6,7 @@ import type {
   StookwijzerResponse,
   AirQualityResponse,
   AppConfig,
+  WeatherStationResponse,
 } from '../types/weather';
 
 const POLL_INTERVAL = 5 * 60 * 1000; // 5 minutes
@@ -141,6 +142,31 @@ export function useAirQuality(lat?: number, lon?: number) {
     const interval = setInterval(fetchData, POLL_INTERVAL);
     return () => clearInterval(interval);
   }, [fetchData]);
+
+  return data;
+}
+
+const STATION_POLL_INTERVAL = 60 * 1000; // 1 minute for live sensor data
+
+export function useWeatherStation(enabled: boolean) {
+  const [data, setData] = useState<WeatherStationResponse | null>(null);
+
+  useEffect(() => {
+    if (!enabled) return;
+
+    const fetchData = async () => {
+      try {
+        const result = await fetchJson<WeatherStationResponse>('/api/weatherstation');
+        setData(result);
+      } catch {
+        // Weather station not available — silent fail
+      }
+    };
+
+    fetchData();
+    const interval = setInterval(fetchData, STATION_POLL_INTERVAL);
+    return () => clearInterval(interval);
+  }, [enabled]);
 
   return data;
 }

@@ -103,6 +103,7 @@ export interface AppConfig {
   locationName: string;
   province: string;
   models: ModelId[];
+  rtl433Enabled?: boolean;
 }
 
 export interface SavedLocation {
@@ -131,4 +132,24 @@ export type TimeRange = '1d' | '3d' | '7d' | '14d';
 export interface ChartDataPoint {
   time: string;
   [modelId: string]: number | string;
+}
+
+export interface WeatherStationSensor {
+  id: number | string;
+  model: string;
+  temperature?: number;
+  humidity?: number;
+  windSpeed?: number;
+  windDirection?: number;
+  windGust?: number;
+  rain?: number;
+  rainTotal?: number;
+  pressure?: number;
+  battery?: string;
+  lastSeen: string;
+}
+
+export interface WeatherStationResponse {
+  sensors: WeatherStationSensor[];
+  fetchedAt: string;
 }

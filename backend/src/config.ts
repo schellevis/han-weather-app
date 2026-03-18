@@ -7,6 +7,13 @@ export const config = {
   knmiApiKey: process.env.KNMI_API_KEY || '',
   haWebhookUrl: process.env.HA_WEBHOOK_URL || '',
 
+  // rtl_433 weather station support
+  rtl433Enabled: process.env.RTL433_ENABLED === 'true',
+  rtl433SensorIds: (process.env.RTL433_SENSOR_IDS || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean),
+
   alerts: {
     checkInterval: 5 * 60 * 1000, // 5 min
   },
